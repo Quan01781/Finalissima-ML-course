@@ -18,13 +18,36 @@ def set_seed(seed=42):
 
 def main():
     set_seed(42)
-    all_results = []
 
     # DATA
     dataset = DatasetManager()
     train_loader, val_loader, test_loader = dataset.get_loaders()
     class_names = test_loader.dataset.classes
+    
+    # ================= PRETRAIN 
+    if Config.PRETRAIN_STAGE:
+        print("PRETRAIN STAGE")
 
+        model_mgr = ModelManager()
+        model = model_mgr.get_model()
+        trainer = Trainer(model, train_loader)
+
+        best_f1 = 0
+        for epoch in range(Config.EPOCHS):
+            loss = trainer.train(train_loader)
+            f1 = trainer.evaluate(val_loader)
+
+            if f1 > best_f1:
+                best_f1 = f1
+                torch.save(model.state_dict(), f"pretrained_{Config.MODEL_NAME}.pth")
+                print(f"Saved pretrained (F1={best_f1:.4f})")
+
+            print(f"[Epoch {epoch+1}/{Config.EPOCHS}] Train Loss={loss:.4f} | F1={f1:.4f}")
+
+        print("PRETRAIN DONE")
+        return
+    # ================= FINETUNE + COMPARE
+    all_results = []
     for model_name in Config.MODELS:
         Config.MODEL_NAME = model_name
         print(f"\n===== Training {model_name}")
@@ -35,13 +58,11 @@ def main():
         trainer = Trainer(model, train_loader)
 
         best_f1 = 0.0
+        save_path = f"best_{model_name}.pth"
         wait = 0
 
         # SAVE PATH theo stage
-        if Config.PRETRAIN_STAGE:
-            save_path =  f"pretrained_{Config.MODEL_NAME}.pth"
-        else:
-            save_path = f"best_{Config.MODEL_NAME}.pth"
+        # save_path = f"best_{Config.MODEL_NAME}.pth"
 
         # TRAIN LOOP
         for epoch in range(Config.EPOCHS):
@@ -76,31 +97,25 @@ def main():
                 break
 
         # TEST
-        if not Config.PRETRAIN_STAGE:
-            print("Loading best model for testing")
-            model.load_state_dict(torch.load(save_path))
-            evaluator = Evaluator(model, class_names)
 
-            # evaluator = Evaluator(model, class_names)
-            # infer = Inference(model, class_names)
-            test_f1 = evaluator.compute_f1(test_loader)
-            print(f"Test F1-score = {test_f1:.4f}")
-            # ROC & MATRIX
-            evaluator.plot_confusion_matrix(test_loader)
-            evaluator.plot_roc(test_loader)
-            # ADD RESULT
-            all_results.append({
-                "model": Config.MODEL_NAME,
-                "f1": test_f1
-            })
+        print("Loading best model for testing")
+        model.load_state_dict(torch.load(save_path))
+        evaluator = Evaluator(model, class_names)
+        # infer = Inference(model, class_names)
+        test_f1 = evaluator.compute_f1(test_loader)
+        print(f"Test F1-score = {test_f1:.4f}")
+        # ROC & MATRIX
+        evaluator.plot_confusion_matrix(test_loader)
+        evaluator.plot_roc(test_loader)
+        # ADD RESULT
+        all_results.append({
+            "model": Config.MODEL_NAME,
+            "f1": test_f1
+        })
 
-        else:
-            print(f"Pretraining finished. {save_path} saved.")
 
     # F1 BAR
     Evaluator.plot_f1_bar(all_results)
 
 if __name__ == "__main__":
     main()
-
-

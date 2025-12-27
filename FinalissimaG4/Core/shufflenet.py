@@ -1,7 +1,5 @@
-import torch
 import torch.nn as nn
 from torchvision.models import shufflenet_v2_x1_0, ShuffleNet_V2_X1_0_Weights
-# self.backbone.fc = nn.Linear(in_features, num_classes)
 
 class ShuffleNetV2(nn.Module):
     def __init__(self, num_classes, pretrained=True):
@@ -15,10 +13,10 @@ class ShuffleNetV2(nn.Module):
         self.backbone = shufflenet_v2_x1_0(weights=weights)
 
         in_features = self.backbone.fc.in_features
-
         # expose fc 
-        self.fc = nn.Linear(in_features, num_classes)
-        self.backbone.fc = self.fc
+        # self.fc = nn.Linear(in_features, num_classes)
+        # self.backbone.fc = self.fc
+        self.backbone.fc = nn.Linear(in_features, num_classes)
 
     def forward(self, x):
         return self.backbone(x)

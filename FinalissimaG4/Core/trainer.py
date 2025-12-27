@@ -96,33 +96,3 @@ class Trainer:
                 y_pred.extend(preds.cpu().numpy())
 
         return f1_score(y_true, y_pred, average="macro")
-
-    # # CONFUSION MATRIX
-    # def plot_confusion_matrix(self, test_loader, class_names):
-    #     self.model.eval()
-    #     y_true, y_pred = [], []
-
-    #     with torch.no_grad():
-    #         for imgs, labels in test_loader:
-    #             imgs = imgs.to(Config.DEVICE)
-    #             outputs = self.model(imgs)
-    #             preds = outputs.argmax(dim=1)
-
-    #             y_true.extend(labels.cpu().numpy())
-    #             y_pred.extend(preds.cpu().numpy())
-
-    #     cm = confusion_matrix(y_true, y_pred)
-
-    #     plt.figure(figsize=(6, 5))
-    #     sns.heatmap(
-    #         cm,
-    #         annot=True,
-    #         fmt="d",
-    #         cmap="Blues",
-    #         xticklabels=class_names,
-    #         yticklabels=class_names
-    #     )
-    #     plt.xlabel("Predicted")
-    #     plt.ylabel("True")
-    #     plt.title("Confusion Matrix")
-    #     plt.show()

@@ -2,6 +2,7 @@ import torch
 import numpy as np
 import matplotlib.pyplot as plt
 import seaborn as sns
+import os
 from sklearn.metrics import f1_score, confusion_matrix, roc_curve, auc
 from sklearn.preprocessing import label_binarize
 from Config.config import Config
@@ -12,6 +13,7 @@ class Evaluator:
         self.model = model
         self.model.eval()
         self.class_names = class_names
+        self.file_path = "C:/Machina Learn/FinalissimaG4"
 
     # COLLECT PREDICTIONS
     def _collect_outputs(self, dataloader):
@@ -54,6 +56,7 @@ class Evaluator:
             plt.text(i, v + 0.01, f"{v:.2f}", ha="center")
 
         plt.ylim(0, 1)
+        plt.savefig(os.path.join("C:/Machina Learn/FinalissimaG4", "f1.png"), dpi=300, bbox_inches="tight")  
         plt.show()
 
     # CONFUSION MATRIX
@@ -74,6 +77,7 @@ class Evaluator:
         plt.xlabel("Predicted")
         plt.ylabel("True")
         plt.title("Confusion Matrix")
+        plt.savefig(os.path.join(self.file_path, "confusion matrix.png"), dpi=300, bbox_inches="tight")  
         plt.show()
 
     # ROC CURVE (MULTI-CLASS)
@@ -103,4 +107,5 @@ class Evaluator:
         plt.ylabel("True Positive Rate")
         plt.title("Multi-class ROC Curve")
         plt.legend()
+        plt.savefig(os.path.join(self.file_path, "roc.png"), dpi=300, bbox_inches="tight")  
         plt.show()

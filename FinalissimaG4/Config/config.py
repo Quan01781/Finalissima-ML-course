@@ -24,7 +24,7 @@ class Config:
         "shufflenet"  
         ]
     # Default model (fallback)
-    MODEL_NAME = ""
+    MODEL_NAME = "shufflenet"
 
     # Device
     DEVICE = "cuda"

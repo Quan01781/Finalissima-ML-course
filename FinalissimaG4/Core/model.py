@@ -1,6 +1,5 @@
 import timm
 import torch
-import torch.nn as nn
 import os
 from Config.config import Config
 from Core.shufflenet import ShuffleNetV2
@@ -38,13 +37,13 @@ class ModelManager:
             if not os.path.exists(ckpt_path):
                 raise FileNotFoundError("pretrained_kaggle.pth not found")
 
-            print("Loading pretrained Kaggle backbone")
+            print("Loading pretrained Kaggle weights")
             state = torch.load(ckpt_path, map_location=Config.DEVICE)
 
             # remove classifier 2-class
             filtered = {
                 k: v for k, v in state.items()
-                if "classifier" not in k and "fc" not in k
+                if "classifier" not in k
             }
 
             self.model.load_state_dict(filtered, strict=False)
@@ -52,14 +51,13 @@ class ModelManager:
             # freeze early stages
             self.freeze_early_stages()
 
-        self.model = self.model.to(Config.DEVICE)
+        self.model.to(Config.DEVICE)
 
     # FREEZE 
     def freeze_early_stages(self):
         print("🔒 Freeze early backbone stages")
 
         for name, param in self.model.named_parameters():
-
             # RESNET
             if Config.USE_RESNET_SE:
                 # Freeze stem + layer1 only
@@ -68,7 +66,6 @@ class ModelManager:
                 else:
                     param.requires_grad = True
             elif Config.MODEL_NAME == "shufflenet":
-                for name, param in self.model.named_parameters():
                     if name.startswith(("backbone.conv1", "backbone.stage2")):
                         param.requires_grad = False
                     else:
@@ -87,6 +84,3 @@ class ModelManager:
 
     def get_model(self):
         return self.model
-
-
-
