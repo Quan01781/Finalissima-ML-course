@@ -18,6 +18,9 @@ class Trainer:
         elif hasattr(model, "fc"):
             num_classes = model.fc.out_features
             head_keywords = ["fc"]
+        elif hasattr(model, "backbone") and hasattr(model.backbone, "fc"):
+            num_classes = model.backbone.fc.out_features
+            head_keywords = ["backbone.fc"]
         else:
             raise ValueError("Cannot detect classifier head")
 
@@ -78,7 +81,7 @@ class Trainer:
 
         return running_loss / len(train_loader)
 
-    # EVALUATE
+    # EVALUATE for val
     def evaluate(self, val_loader):
         self.model.eval()
         y_true, y_pred = [], []
@@ -94,32 +97,32 @@ class Trainer:
 
         return f1_score(y_true, y_pred, average="macro")
 
-    # CONFUSION MATRIX
-    def plot_confusion_matrix(self, test_loader, class_names):
-        self.model.eval()
-        y_true, y_pred = [], []
+    # # CONFUSION MATRIX
+    # def plot_confusion_matrix(self, test_loader, class_names):
+    #     self.model.eval()
+    #     y_true, y_pred = [], []
 
-        with torch.no_grad():
-            for imgs, labels in test_loader:
-                imgs = imgs.to(Config.DEVICE)
-                outputs = self.model(imgs)
-                preds = outputs.argmax(dim=1)
+    #     with torch.no_grad():
+    #         for imgs, labels in test_loader:
+    #             imgs = imgs.to(Config.DEVICE)
+    #             outputs = self.model(imgs)
+    #             preds = outputs.argmax(dim=1)
 
-                y_true.extend(labels.cpu().numpy())
-                y_pred.extend(preds.cpu().numpy())
+    #             y_true.extend(labels.cpu().numpy())
+    #             y_pred.extend(preds.cpu().numpy())
 
-        cm = confusion_matrix(y_true, y_pred)
+    #     cm = confusion_matrix(y_true, y_pred)
 
-        plt.figure(figsize=(6, 5))
-        sns.heatmap(
-            cm,
-            annot=True,
-            fmt="d",
-            cmap="Blues",
-            xticklabels=class_names,
-            yticklabels=class_names
-        )
-        plt.xlabel("Predicted")
-        plt.ylabel("True")
-        plt.title("Confusion Matrix")
-        plt.show()
+    #     plt.figure(figsize=(6, 5))
+    #     sns.heatmap(
+    #         cm,
+    #         annot=True,
+    #         fmt="d",
+    #         cmap="Blues",
+    #         xticklabels=class_names,
+    #         yticklabels=class_names
+    #     )
+    #     plt.xlabel("Predicted")
+    #     plt.ylabel("True")
+    #     plt.title("Confusion Matrix")
+    #     plt.show()

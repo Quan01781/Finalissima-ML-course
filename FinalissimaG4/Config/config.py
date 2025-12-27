@@ -14,7 +14,7 @@ class Config:
     BATCH_SIZE = 16
     EPOCHS = 20
     LR = 1e-4
-    FREEZE_EPOCHS = 4      #  epochs freeze backbone
+    FREEZE_EPOCHS = 0     #  epochs freeze backbone
     PATIENCE = 5           #  early stopping
 
     # Model
@@ -24,7 +24,7 @@ class Config:
         "shufflenet"  
         ]
     # Default model (fallback)
-    MODEL_NAME = MODELS[2]
+    MODEL_NAME = ""
 
     # Device
     DEVICE = "cuda"
