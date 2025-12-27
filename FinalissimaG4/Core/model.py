@@ -33,7 +33,7 @@ class ModelManager:
 
         # LOAD PRETRAINED KAGGLE
         if not Config.PRETRAIN_STAGE:
-            ckpt_path = "pretrained_kaggle.pth"
+            ckpt_path = f"pretrained_{Config.MODEL_NAME}.pth"
             if not os.path.exists(ckpt_path):
                 raise FileNotFoundError("pretrained_kaggle.pth not found")
 
@@ -41,10 +41,17 @@ class ModelManager:
             state = torch.load(ckpt_path, map_location=Config.DEVICE)
 
             # remove classifier 2-class
-            filtered = {
-                k: v for k, v in state.items()
-                if "classifier" not in k
-            }
+            filtered = {}
+            for k, v in state.items():
+                # REMOVE classifier head (2-class)
+                if k.startswith("backbone.fc"):
+                    continue
+                if k.startswith("fc"):
+                    continue
+                if "classifier" in k:
+                    continue
+
+                filtered[k] = v
 
             self.model.load_state_dict(filtered, strict=False)
 

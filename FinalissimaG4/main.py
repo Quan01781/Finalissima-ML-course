@@ -1,6 +1,7 @@
 import torch
 import random
 import numpy as np
+import os
 from Core.dataset import DatasetManager
 from Core.model import ModelManager
 from Core.trainer import Trainer
@@ -50,54 +51,57 @@ def main():
     all_results = []
     for model_name in Config.MODELS:
         Config.MODEL_NAME = model_name
-        print(f"\n===== Training {model_name}")
+        print(f"\n===== {model_name}")
+        save_path = f"best_{model_name}.pth"
+        # ================= SKIP TRAIN IF EXISTS
         # MODEL 
         model_mgr = ModelManager()
         model = model_mgr.get_model()
-        # TRAINER
-        trainer = Trainer(model, train_loader)
+        # IF TRAINED
+        if os.path.exists(save_path):
+            print(f"Found {save_path}, skip training")
+            model.load_state_dict(torch.load(save_path))
+        else:
+            print("Training from scratch (finetune)")
+            trainer = Trainer(model, train_loader)
 
-        best_f1 = 0.0
-        save_path = f"best_{model_name}.pth"
-        wait = 0
+            best_f1 = 0.0
+            wait = 0
 
-        # SAVE PATH theo stage
-        # save_path = f"best_{Config.MODEL_NAME}.pth"
+            # SAVE PATH theo stage
+            # save_path = f"best_{Config.MODEL_NAME}.pth"
 
-        # TRAIN LOOP
-        for epoch in range(Config.EPOCHS):
+            # TRAIN LOOP
+            for epoch in range(Config.EPOCHS):
 
-            # UNFREEZE (4-CLASS)
-            if (not Config.PRETRAIN_STAGE) and epoch == Config.FREEZE_EPOCHS:
-                model_mgr.unfreezer()
-                trainer = Trainer(model, train_loader)  # reset optimizer
-                print("🔓 Backbone unfrozen")
+                # UNFREEZE (4-CLASS)
+                if epoch == Config.FREEZE_EPOCHS:
+                    model_mgr.unfreezer()
+                    trainer = Trainer(model, train_loader)  # reset optimizer
+                    print("🔓 Backbone unfrozen")
 
-            train_loss = trainer.train(train_loader)
-            val_f1 = trainer.evaluate(val_loader)
+                train_loss = trainer.train(train_loader)
+                val_f1 = trainer.evaluate(val_loader)
 
-            if val_f1 > best_f1:
-                best_f1 = val_f1
-                wait = 0
-                torch.save(model.state_dict(), save_path)
-                
-                stage = "PRETRAIN" if Config.PRETRAIN_STAGE else "FINETUNE"
-                print(f"[{stage}] Saved best model (F1 = {best_f1:.4f})")
-            else:
-                wait += 1
+                if val_f1 > best_f1:
+                    best_f1 = val_f1
+                    wait = 0
+                    torch.save(model.state_dict(), save_path)           
+                    print(f"Saved best {model_name} (F1 = {best_f1:.4f})")
+                else:
+                    wait += 1
 
-            print(
-                f"[Epoch {epoch+1}/{Config.EPOCHS}] "
-                f"Train Loss = {train_loss:.4f} | Val F1 = {val_f1:.4f}"
-            )
+                print(
+                    f"[Epoch {epoch+1}/{Config.EPOCHS}] "
+                    f"Train Loss = {train_loss:.4f} | Val F1 = {val_f1:.4f}"
+                )
 
-            # EARLY STOP
-            if wait >= Config.PATIENCE:
-                print("Early stopping triggered")
-                break
+                # EARLY STOP
+                if wait >= Config.PATIENCE:
+                    print("Early stopping triggered")
+                    break
 
         # TEST
-
         print("Loading best model for testing")
         model.load_state_dict(torch.load(save_path))
         evaluator = Evaluator(model, class_names)

@@ -1,10 +1,10 @@
 class Config:
     # Dataset
-    # DATASET_ROOT = "dataset"
-    DATASET_ROOT = "kaggle_dataset"
+    DATASET_ROOT = "dataset"
+    # DATASET_ROOT = "kaggle_dataset"
     # pretrained_kaggle.pth
     NUM_CLASSES = 4
-    PRETRAIN_STAGE = True
+    PRETRAIN_STAGE = False
 
     # Ablation study
     USE_RESNET_SE = False
@@ -14,7 +14,7 @@ class Config:
     BATCH_SIZE = 16
     EPOCHS = 20
     LR = 1e-4
-    FREEZE_EPOCHS = 0     #  epochs freeze backbone
+    FREEZE_EPOCHS = 4     #  epochs freeze backbone
     PATIENCE = 5           #  early stopping
 
     # Model
@@ -24,7 +24,7 @@ class Config:
         "shufflenet"  
         ]
     # Default model (fallback)
-    MODEL_NAME = "shufflenet"
+    MODEL_NAME = "efficientnet_b0"
 
     # Device
     DEVICE = "cuda"
