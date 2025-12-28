@@ -15,7 +15,7 @@ class Trainer:
         if hasattr(model, "classifier"):
             num_classes = model.classifier.out_features
             head_keywords = ["classifier"]
-        elif hasattr(model, "fc"):
+        elif hasattr(model, "fc") and hasattr(model, "backbone"):
             num_classes = model.fc.out_features
             head_keywords = ["fc"]
         elif hasattr(model, "backbone") and hasattr(model.backbone, "fc"):

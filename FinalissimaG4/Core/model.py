@@ -12,7 +12,7 @@ class ModelManager:
         num_classes = 2 if Config.PRETRAIN_STAGE else Config.NUM_CLASSES
 
         # ABLATION: RESNET18 + SE
-        if Config.USE_RESNET_SE:
+        if Config.MODEL_NAME == "resnetse":
             self.model = ResNet18_SE(
                 num_classes=num_classes,
                 pretrained=True
@@ -35,20 +35,20 @@ class ModelManager:
         if not Config.PRETRAIN_STAGE:
             ckpt_path = f"pretrained_{Config.MODEL_NAME}.pth"
             if not os.path.exists(ckpt_path):
-                raise FileNotFoundError("pretrained_kaggle.pth not found")
+                raise FileNotFoundError(f"{ckpt_path} not found")
 
-            print("Loading pretrained Kaggle weights")
+            print(f"Loading pretrained Kaggle weights: {ckpt_path}")
             state = torch.load(ckpt_path, map_location=Config.DEVICE)
 
             # remove classifier 2-class
             filtered = {}
             for k, v in state.items():
                 # REMOVE classifier head (2-class)
-                if k.startswith("backbone.fc"):
-                    continue
-                if k.startswith("fc"):
+                if k.startswith(("backbone.fc", "fc")):
                     continue
                 if "classifier" in k:
+                    continue
+                if Config.USE_RESNET_SE and "se" in k.lower():
                     continue
 
                 filtered[k] = v

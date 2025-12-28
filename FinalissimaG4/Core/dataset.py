@@ -18,7 +18,7 @@ class DatasetManager:
         ])
 
 
-        # Val/Test no augmentation
+        # Val/Test
         self.val_tf = transforms.Compose([
             transforms.Resize((Config.IMG_SIZE, Config.IMG_SIZE)),
             transforms.ToTensor(),

@@ -7,7 +7,7 @@ class Config:
     PRETRAIN_STAGE = False
 
     # Ablation study
-    USE_RESNET_SE = False
+    USE_RESNET_SE = True
 
     # Training
     IMG_SIZE = 224
@@ -21,10 +21,11 @@ class Config:
     MODELS = [
         "efficientnet_b0", # EfficiemtNet
         "mobilenetv3_small_100", # MobileNet 
-        "shufflenet"  
+        "shufflenet",
+        "resnetse" 
         ]
     # Default model (fallback)
-    MODEL_NAME = "efficientnet_b0"
+    MODEL_NAME = ""
 
     # Device
     DEVICE = "cuda"
