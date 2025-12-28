@@ -8,19 +8,16 @@ from Core.resnetse import ResNet18_SE
 
 class ModelManager:
     def __init__(self):
-        # num_classes theo stage
-        num_classes = 2 if Config.PRETRAIN_STAGE else Config.NUM_CLASSES
-
         # ABLATION: RESNET18 + SE
         if Config.MODEL_NAME == "resnetse":
             self.model = ResNet18_SE(
-                num_classes=num_classes,
+                num_classes=Config.NUM_CLASSES,
                 pretrained=True
             )
         # SHUFFLENET
         elif Config.MODEL_NAME == "shufflenet":
             self.model = ShuffleNetV2(
-                num_classes=num_classes,
+                num_classes=Config.NUM_CLASSES,
                 pretrained=True
             )
         # OTHER MODELS 
@@ -28,7 +25,7 @@ class ModelManager:
             self.model = timm.create_model(
                 Config.MODEL_NAME,
                 pretrained=True,   # ImageNet
-                num_classes=num_classes
+                num_classes=Config.NUM_CLASSES
             )
 
         # LOAD PRETRAINED KAGGLE
@@ -48,7 +45,7 @@ class ModelManager:
                     continue
                 if "classifier" in k:
                     continue
-                if Config.USE_RESNET_SE and "se" in k.lower():
+                if Config.USE_RESNET_SE and "se" in k.lower(): # resnet se
                     continue
 
                 filtered[k] = v
@@ -72,6 +69,7 @@ class ModelManager:
                     param.requires_grad = False
                 else:
                     param.requires_grad = True
+            # SHUFFLENET
             elif Config.MODEL_NAME == "shufflenet":
                     if name.startswith(("backbone.conv1", "backbone.stage2")):
                         param.requires_grad = False

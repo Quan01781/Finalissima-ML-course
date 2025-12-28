@@ -1,10 +1,9 @@
 class Config:
-    # Dataset
-    DATASET_ROOT = "dataset"
-    # DATASET_ROOT = "kaggle_dataset"
-    # pretrained_kaggle.pth
-    NUM_CLASSES = 4
     PRETRAIN_STAGE = False
+    # Dataset
+    # DATASET_ROOT = "dataset"
+    DATASET_ROOT = "kaggle_dataset" if PRETRAIN_STAGE == True else "dataset"
+    NUM_CLASSES = 2 if PRETRAIN_STAGE == True else 4
 
     # Ablation study
     USE_RESNET_SE = True

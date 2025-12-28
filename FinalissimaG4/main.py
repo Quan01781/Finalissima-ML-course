@@ -5,10 +5,10 @@ import os
 from Core.dataset import DatasetManager
 from Core.model import ModelManager
 from Core.trainer import Trainer
-from Inference.infer import Inference
 from Config.config import Config
 from Core.evaluate import Evaluator
 
+# FIX RANDOM SEED
 def set_seed(seed=42):
     random.seed(seed)
     np.random.seed(seed)
@@ -25,7 +25,7 @@ def main():
     train_loader, val_loader, test_loader = dataset.get_loaders()
     class_names = test_loader.dataset.classes
     
-    # ================= PRETRAIN 
+    # PRETRAIN 
     if Config.PRETRAIN_STAGE:
         print("PRETRAIN STAGE")
 
@@ -47,13 +47,13 @@ def main():
 
         print("PRETRAIN DONE")
         return
-    # ================= FINETUNE + COMPARE
+    # FINETUNE + COMPARE
     all_results = []
     for model_name in Config.MODELS:
         Config.MODEL_NAME = model_name
         print(f"\n===== {model_name}")
         save_path = f"best_{model_name}.pth"
-        # ================= SKIP TRAIN IF EXISTS
+        # SKIP TRAIN IF EXISTS
         # MODEL 
         model_mgr = ModelManager()
         model = model_mgr.get_model()
@@ -68,9 +68,6 @@ def main():
             best_f1 = 0.0
             wait = 0
 
-            # SAVE PATH theo stage
-            # save_path = f"best_{Config.MODEL_NAME}.pth"
-
             # TRAIN LOOP
             for epoch in range(Config.EPOCHS):
 
@@ -79,7 +76,7 @@ def main():
                     model_mgr.unfreezer()
                     trainer = Trainer(model, train_loader)  # reset optimizer
                     print("🔓 Backbone unfrozen")
-
+                # LOSS, F1
                 train_loss = trainer.train(train_loader)
                 val_f1 = trainer.evaluate(val_loader)
 
@@ -101,16 +98,15 @@ def main():
                     print("Early stopping triggered")
                     break
 
-        # TEST
+        # EVALUATE
         print("Loading best model for testing")
         model.load_state_dict(torch.load(save_path))
         evaluator = Evaluator(model, class_names)
-        # infer = Inference(model, class_names)
         test_f1 = evaluator.compute_f1(test_loader)
         print(f"Test F1-score = {test_f1:.4f}")
-        # ROC & MATRIX
+        # MATRIX
         evaluator.plot_confusion_matrix(test_loader)
-        evaluator.plot_roc(test_loader)
+        evaluator.plot_embedding(test_loader)
         # ADD RESULT
         all_results.append({
             "model": Config.MODEL_NAME,
@@ -120,6 +116,7 @@ def main():
 
     # F1 BAR
     Evaluator.plot_f1_bar(all_results)
+    
 
 if __name__ == "__main__":
     main()

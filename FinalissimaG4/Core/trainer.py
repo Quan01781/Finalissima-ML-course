@@ -1,8 +1,6 @@
 import torch
 import torch.nn as nn
-from sklearn.metrics import f1_score, confusion_matrix
-import matplotlib.pyplot as plt
-import seaborn as sns
+from sklearn.metrics import f1_score
 from Config.config import Config
 import numpy as np
 
@@ -15,10 +13,10 @@ class Trainer:
         if hasattr(model, "classifier"):
             num_classes = model.classifier.out_features
             head_keywords = ["classifier"]
-        elif hasattr(model, "fc") and hasattr(model, "backbone"):
+        elif hasattr(model, "fc") and hasattr(model, "backbone"): # resnet se
             num_classes = model.fc.out_features
             head_keywords = ["fc"]
-        elif hasattr(model, "backbone") and hasattr(model.backbone, "fc"):
+        elif hasattr(model, "backbone") and hasattr(model.backbone, "fc"): # shufflenet
             num_classes = model.backbone.fc.out_features
             head_keywords = ["backbone.fc"]
         else:
