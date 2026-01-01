@@ -31,19 +31,27 @@ def main():
 
         model_mgr = ModelManager()
         model = model_mgr.get_model()
-        trainer = Trainer(model, train_loader)
+        trainer = Trainer(model)
 
-        best_f1 = 0
+        best_f1 = 0.0
+        wait = 0
         for epoch in range(Config.EPOCHS):
             loss = trainer.train(train_loader)
             f1 = trainer.evaluate(val_loader)
 
             if f1 > best_f1:
                 best_f1 = f1
+                wait = 0
                 torch.save(model.state_dict(), f"pretrained_{Config.MODEL_NAME}.pth")
                 print(f"Saved pretrained (F1={best_f1:.4f})")
-
+            else:
+                wait += 1
             print(f"[Epoch {epoch+1}/{Config.EPOCHS}] Train Loss={loss:.4f} | F1={f1:.4f}")
+            
+            # EARLY STOP
+            if wait >= Config.PATIENCE:
+                print("Early stopping triggered")
+                break
 
         print("PRETRAIN DONE")
         return
@@ -63,7 +71,7 @@ def main():
             model.load_state_dict(torch.load(save_path))
         else:
             print("Training from scratch (finetune)")
-            trainer = Trainer(model, train_loader)
+            trainer = Trainer(model)
 
             best_f1 = 0.0
             wait = 0
@@ -74,7 +82,7 @@ def main():
                 # UNFREEZE (4-CLASS)
                 if epoch == Config.FREEZE_EPOCHS:
                     model_mgr.unfreezer()
-                    trainer = Trainer(model, train_loader)  # reset optimizer
+                    trainer = Trainer(model)  # reset optimizer
                     print("🔓 Backbone unfrozen")
                 # LOSS, F1
                 train_loss = trainer.train(train_loader)

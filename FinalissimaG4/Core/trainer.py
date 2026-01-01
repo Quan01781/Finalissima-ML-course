@@ -6,7 +6,7 @@ import numpy as np
 
 
 class Trainer:
-    def __init__(self, model, train_loader):
+    def __init__(self, model):
         self.model = model
 
         # DETECT HEAD & NUM_CLASSES
@@ -36,25 +36,33 @@ class Trainer:
                 backbone_params.append(param)
 
         # COMPUTE CLASS WEIGHTS
-        labels = []
-        for _, y in train_loader:
-            labels.extend(y.cpu().numpy())
+        # labels = []
+        # for _, y in train_loader:
+        #     labels.extend(y.cpu().numpy())
 
-        class_count = np.bincount(labels, minlength=num_classes)
+        # class_count = np.bincount(labels, minlength=num_classes)
 
-        class_weights = torch.tensor(
-            1.0 / (class_count + 1e-6),
-            dtype=torch.float
-        ).to(Config.DEVICE)
+        # class_weights = torch.tensor(
+        #     1.0 / (class_count + 1e-6),
+        #     dtype=torch.float
+        # ).to(Config.DEVICE)
 
         # LOSS
-        self.criterion = nn.CrossEntropyLoss(weight=class_weights)
+        self.criterion = nn.CrossEntropyLoss()
 
         # OPTIMIZER
-        self.optimizer = torch.optim.Adam([
+        self.optimizer = torch.optim.AdamW([
             {"params": backbone_params, "lr": Config.LR * 0.1},
             {"params": head_params, "lr": Config.LR}
-        ])
+            ],
+            weight_decay=1e-4)
+        
+        # LR SCHEDULER
+        self.scheduler = torch.optim.lr_scheduler.CosineAnnealingLR(
+            self.optimizer,
+            T_max=Config.EPOCHS,
+            eta_min=1e-6
+        )
 
         print(f"Optimizer setup:")
         print(f"  Backbone params: {len(backbone_params)}")
@@ -63,7 +71,7 @@ class Trainer:
     # TRAIN
     def train(self, train_loader):
         self.model.train()
-        running_loss = 0.0
+        total_loss  = 0.0
 
         for imgs, labels in train_loader:
             imgs = imgs.to(Config.DEVICE)
@@ -75,9 +83,11 @@ class Trainer:
             loss.backward()
             self.optimizer.step()
 
-            running_loss += loss.item()
+            total_loss  += loss.item()
 
-        return running_loss / len(train_loader)
+        # STEP SCHEDULER EACH EPOCH
+        self.scheduler.step()
+        return total_loss  / len(train_loader)
 
     # EVALUATE for val
     def evaluate(self, val_loader):

@@ -1,0 +1,7 @@
+Seed fixing → Model initialization (ImageNet) 
+→ Kaggle pretraining
+→ Load pretrained weights + freeze early layers 
+→ Fine-tuning with unfreezing 
+→ Best checkpoint saving 
+→ Test evaluation (F1, confusion matrix) 
+→ PCA embedding visualization
