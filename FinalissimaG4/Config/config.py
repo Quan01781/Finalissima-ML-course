@@ -8,6 +8,9 @@ class Config:
     # Ablation study
     USE_RESNET_SE = False
 
+    # Label Smoothing
+    # LABEL_SMOOTHING = 0.05
+    
     # Training
     IMG_SIZE = 224
     BATCH_SIZE = 16
@@ -28,3 +31,4 @@ class Config:
 
     # Device
     DEVICE = "cuda"
+
