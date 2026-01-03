@@ -11,13 +11,13 @@ class Trainer:
 
         # DETECT HEAD & NUM_CLASSES
         if hasattr(model, "classifier"):
-            num_classes = model.classifier.out_features
+            # num_classes = model.classifier.out_features
             head_keywords = ["classifier"]
         elif hasattr(model, "fc") and hasattr(model, "backbone"): # resnet se
-            num_classes = model.fc.out_features
+            # num_classes = model.fc.out_features
             head_keywords = ["fc"]
         elif hasattr(model, "backbone") and hasattr(model.backbone, "fc"): # shufflenet
-            num_classes = model.backbone.fc.out_features
+            # num_classes = model.backbone.fc.out_features
             head_keywords = ["backbone.fc"]
         else:
             raise ValueError("Cannot detect classifier head")
@@ -90,7 +90,7 @@ class Trainer:
         return total_loss  / len(train_loader)
 
     # EVALUATE for val
-    def evaluate(self, val_loader):
+    def evaluate(self, val_loader, threshold=None):
         self.model.eval()
         y_true, y_pred = [], []
 
@@ -98,7 +98,21 @@ class Trainer:
             for imgs, labels in val_loader:
                 imgs = imgs.to(Config.DEVICE)
                 outputs = self.model(imgs)
-                preds = outputs.argmax(dim=1)
+                # preds = outputs.argmax(dim=1)
+
+                if threshold is None:
+                    preds = outputs.argmax(dim=1)
+                else:
+                    probs = torch.softmax(outputs, dim=1)
+                    conf, preds = probs.max(dim=1)
+
+                    fallback_class = torch.mode(preds)[0].item()
+                    preds = torch.where(
+                        conf >= threshold,
+                        preds,
+                        torch.tensor(fallback_class, device=preds.device)
+                    )   
+
 
                 y_true.extend(labels.cpu().numpy())
                 y_pred.extend(preds.cpu().numpy())

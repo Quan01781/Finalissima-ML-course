@@ -38,9 +38,15 @@ class Evaluator:
         )
 
     # F1 SCORE for test, visualize
-    def compute_f1(self, dataloader):
-        y_true, y_pred, _ = self._collect_outputs(dataloader)
-        return f1_score(y_true, y_pred, average="macro")
+    # def compute_f1(self, dataloader):
+    #     y_true, y_pred, _ = self._collect_outputs(dataloader)
+
+    #     f1_macro = f1_score(y_true, y_pred, average="macro")
+    #     f1_micro = f1_score(y_true, y_pred, average="micro")
+
+    #     print(f"Macro F1 : {f1_macro:.4f}")
+    #     print(f"Micro F1 : {f1_micro:.4f}")
+    #     return f1_macro
 
     # F1 BAR CHART
     @staticmethod
@@ -62,9 +68,15 @@ class Evaluator:
         plt.show()
 
     # CONFUSION MATRIX
-    def plot_confusion_matrix(self, dataloader):
-        y_true, y_pred, _ = self._collect_outputs(dataloader)
+    def plot_confusion_matrix(self, dataloader, threshold = None):
+        # y_true, y_pred, _ = self._collect_outputs(dataloader)
+        y_true, _, y_prob = self._collect_outputs(dataloader)
 
+        if threshold is not None and y_prob.shape[1] == 2:
+            y_pred = (y_prob[:, 1] >= threshold).astype(int)
+        else:
+            y_pred = y_prob.argmax(axis=1)
+    
         cm = confusion_matrix(y_true, y_pred)
 
         plt.figure(figsize=(6,5))
