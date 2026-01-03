@@ -69,6 +69,7 @@ def main():
         if os.path.exists(save_path):
             print(f"Found {save_path}, skip training")
             model.load_state_dict(torch.load(save_path))
+            trainer = Trainer(model)
         else:
             print("Training from scratch (finetune)")
             trainer = Trainer(model)
@@ -109,11 +110,29 @@ def main():
         # EVALUATE
         print("Loading best model for testing")
         model.load_state_dict(torch.load(save_path))
+        # THRESHOLD
+        print("Selecting best threshold on VAL set")
+        thresholds = [0.3, 0.4, 0.5, 0.6, 0.7]
+        best_t = None
+        best_f1 = 0.0
+        for t in thresholds:
+            f1 = trainer.evaluate(val_loader, threshold=t)
+            print(f"Threshold={t} | Val F1={f1:.4f}")
+
+            if f1 > best_f1:
+                best_f1 = f1
+                best_t = t
+        print(f"Best threshold = {best_t} (Val F1 = {best_f1:.4f})")
+
+        # TEST
         evaluator = Evaluator(model, class_names)
-        test_f1 = evaluator.compute_f1(test_loader)
+        print("Evaluating on TEST with selected threshold")
+        test_f1 = trainer.evaluate(test_loader, threshold=best_t)
         print(f"Test F1-score = {test_f1:.4f}")
+        # test_f1 = evaluator.compute_f1(test_loader)
+        # print(f"Test F1-score = {test_f1:.4f}")
         # MATRIX
-        evaluator.plot_confusion_matrix(test_loader)
+        evaluator.plot_confusion_matrix(test_loader, threshold=best_t)
         evaluator.plot_embedding(test_loader)
         # ADD RESULT
         all_results.append({
